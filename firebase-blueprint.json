@@ -1,0 +1,116 @@
+{
+  "collections": {
+    "users": {
+      "description": "User profiles representing accounts, excluding group-specific roles.",
+      "fields": {
+        "uid": { "type": "string", "required": true },
+        "email": { "type": "string", "required": true },
+        "displayName": { "type": "string", "required": true },
+        "photoURL": { "type": "string", "required": false },
+        "language": { "type": "string", "required": true },
+        "createdAt": { "type": "timestamp", "required": true },
+        "updatedAt": { "type": "timestamp", "required": true }
+      }
+    },
+    "sols": {
+      "description": "SOL groupings (interactive community circles).",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true },
+        "description": { "type": "string", "required": true },
+        "contributionAmount": { "type": "number", "required": true },
+        "frequency": { "type": "string", "required": true, "values": ["weekly", "biweekly", "monthly"] },
+        "totalPot": { "type": "number", "required": true },
+        "status": { "type": "string", "required": true, "values": ["upcoming", "active", "completed"] },
+        "creatorId": { "type": "string", "required": true },
+        "currentCycleId": { "type": "string", "required": true },
+        "cycleNumber": { "type": "number", "required": true },
+        "maxMembers": { "type": "number", "required": true },
+        "rules": { "type": "string", "required": false },
+        "tirayMethod": { "type": "string", "required": true },
+        "createdAt": { "type": "timestamp", "required": true },
+        "updatedAt": { "type": "timestamp", "required": true }
+      }
+    },
+    "memberships": {
+      "description": "Mapping from user identifiers to specific SOL group memberships storing roles and status.",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "solId": { "type": "string", "required": true },
+        "userId": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true },
+        "email": { "type": "string", "required": true },
+        "phone": { "type": "string", "required": true },
+        "role": { "type": "string", "required": true, "values": ["maman_sol", "member"] },
+        "status": { "type": "string", "required": true, "values": ["active", "pending", "suspended", "removed"] },
+        "joinedAt": { "type": "timestamp", "required": true }
+      }
+    },
+    "cycles": {
+      "description": "Active rotation periods / rounds within a SOL group.",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "solId": { "type": "string", "required": true },
+        "cycleNumber": { "type": "number", "required": true },
+        "startDate": { "type": "timestamp", "required": true },
+        "endDate": { "type": "timestamp", "required": true },
+        "status": { "type": "string", "required": true, "values": ["upcoming", "active", "completed"] },
+        "currentHandPosition": { "type": "number", "required": true },
+        "totalHands": { "type": "number", "required": true }
+      }
+    },
+    "contributions": {
+      "description": "Individual due or paid amounts for member cycles.",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "solId": { "type": "string", "required": true },
+        "cycleId": { "type": "string", "required": true },
+        "memberId": { "type": "string", "required": true },
+        "amount": { "type": "number", "required": true },
+        "dueDate": { "type": "timestamp", "required": true },
+        "paidDate": { "type": "timestamp", "required": false },
+        "status": { "type": "string", "required": true, "values": ["pending", "paid", "late"] },
+        "paymentMethod": { "type": "string", "required": false }
+      }
+    },
+    "beneficiaries": {
+      "description": "Defined payouts queue positions and payouts allocations.",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "solId": { "type": "string", "required": true },
+        "cycleId": { "type": "string", "required": true },
+        "memberId": { "type": "string", "required": true },
+        "memberName": { "type": "string", "required": true },
+        "position": { "type": "number", "required": true },
+        "payoutDate": { "type": "timestamp", "required": true },
+        "status": { "type": "string", "required": true, "values": ["upcoming", "current", "completed"] },
+        "payoutAmount": { "type": "number", "required": true }
+      }
+    },
+    "notifications": {
+      "description": "Critical alerts, late notices, and congratulations.",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "userId": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "message": { "type": "string", "required": true },
+        "category": { "type": "string", "required": true },
+        "date": { "type": "timestamp", "required": true },
+        "read": { "type": "boolean", "required": true },
+        "solId": { "type": "string", "required": false }
+      }
+    },
+    "invitations": {
+      "description": "Invitations sent to prospective members via email.",
+      "fields": {
+        "id": { "type": "string", "required": true },
+        "solId": { "type": "string", "required": true },
+        "solName": { "type": "string", "required": true },
+        "email": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true },
+        "dateSent": { "type": "timestamp", "required": true }
+      }
+    }
+  }
+}

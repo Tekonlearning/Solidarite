@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;850;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;505;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg-primary: #FBF9F7;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border-color: #e2e8f0;
+}
+
+.dark {
+  --bg-primary: #111417;
+  --bg-card: #1d2127;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #2e353f;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Dark Mode class selectors override for Tailwind */
+.dark body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark header#app-header {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark .bg-\[\#FBF9F7\]\/95 {
+  background-color: rgba(17, 20, 23, 0.95) !important;
+}
+
+.dark .border-slate-200,
+.dark .border-slate-200\/60,
+.dark .border-slate-200\/80,
+.dark .border-slate-100 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .text-slate-900,
+.dark .text-slate-850,
+.dark .text-slate-800,
+.dark .text-slate-750,
+.dark .text-slate-705 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400,
+.dark .text-slate-600,
+.dark .text-slate-650 {
+  color: var(--text-secondary) !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark button.bg-white,
+.dark div.bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+.dark button.bg-white:hover {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark .text-slate-700 {
+  color: var(--text-primary) !important;
+}
+
+/* Custom scrollbar to keep layout clean and thin */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

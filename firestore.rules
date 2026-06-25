@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Core Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Safely reads the user document
+    function getUserDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    // Safely reads a membership document
+    function getMembershipDoc(userId, solId) {
+      return get(/databases/$(database)/documents/memberships/$(userId + "_" + solId)).data;
+    }
+
+    // Checks if a membership document exists
+    function hasMembership(userId, solId) {
+      return exists(/databases/$(database)/documents/memberships/$(userId + "_" + solId));
+    }
+
+    // Checks if user is an active member or manager in a Sòl group
+    function isMemberOfSol(solId) {
+      return isAuthenticated() && 
+        hasMembership(request.auth.uid, solId) && 
+        getMembershipDoc(request.auth.uid, solId).status == 'active';
+    }
+
+    // Checks if user is the Maman Sòl (manager) of a specific Sòl group
+    function isMamanSolOfSol(solId) {
+      return isAuthenticated() && 
+        hasMembership(request.auth.uid, solId) && 
+        getMembershipDoc(request.auth.uid, solId).role == 'maman_sol' && 
+        getMembershipDoc(request.auth.uid, solId).status == 'active';
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false; // Deny direct user deletion via client SDK
+    }
+
+    // Sòl Groups collection rules
+    match /sols/{solId} {
+      allow read: if isAuthenticated() && isMemberOfSol(solId);
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && isMamanSolOfSol(solId);
+    }
+
+    // Memberships mapping rules
+    match /memberships/{membershipId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        isMemberOfSol(resource.data.solId)
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        isMamanSolOfSol(resource.data.solId)
+      );
+      allow delete: if isAuthenticated() && isMamanSolOfSol(resource.data.solId);
+    }
+
+    // Cycles collection rules
+    match /cycles/{cycleId} {
+      allow read: if isAuthenticated() && isMemberOfSol(resource.data.solId);
+      allow create: if isAuthenticated() && isMamanSolOfSol(request.resource.data.solId);
+      allow update, delete: if isAuthenticated() && isMamanSolOfSol(resource.data.solId);
+    }
+
+    // Contributions collection rules
+    match /contributions/{contribId} {
+      allow read: if isAuthenticated() && isMemberOfSol(resource.data.solId);
+      allow create: if isAuthenticated() && isMamanSolOfSol(request.resource.data.solId);
+      allow update: if isAuthenticated() && (
+        isMamanSolOfSol(resource.data.solId) || 
+        request.auth.uid == resource.data.userId ||
+        request.auth.uid == resource.data.memberId
+      );
+      allow delete: if isAuthenticated() && isMamanSolOfSol(resource.data.solId);
+    }
+
+    // Beneficiaries collection rules
+    match /beneficiaries/{benId} {
+      allow read: if isAuthenticated() && isMemberOfSol(resource.data.solId);
+      allow create, update, delete: if isAuthenticated() && isMamanSolOfSol(resource.data.solId);
+    }
+
+    // Notifications rules
+    match /notifications/{notifId} {
+      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+    }
+
+    // Invitations rules
+    match /invitations/{invId} {
+      allow read: if isAuthenticated() && (
+        isMamanSolOfSol(resource.data.solId) || 
+        resource.data.email == request.auth.token.email
+      );
+      allow create: if isAuthenticated() && isMamanSolOfSol(request.resource.data.solId);
+      allow update: if isAuthenticated() && (
+        isMamanSolOfSol(resource.data.solId) || 
+        resource.data.email == request.auth.token.email
+      );
+      allow delete: if isAuthenticated() && isMamanSolOfSol(resource.data.solId);
+    }
+  }
+}
