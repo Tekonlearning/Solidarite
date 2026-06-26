@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Globe, Bell, User, Users, RefreshCw, Layers, LogOut, Sun, Moon } from 'lucide-react';
 import { Language, UserSession } from '../types';
 import { translations } from '../translations';
-import { mockUsers } from '../mockData';
 
 interface HeaderProps {
   currentLanguage: Language;
@@ -127,7 +126,7 @@ export default function Header({
               </span>
             )}
           </button>
-          {/* USER PICKER (SIMULATOR MODE OR EXPERT LOGIN) */}
+          {/* USER PROFILE DROPDOWN */}
           <div className="relative">
             {currentUser ? (
               <>
@@ -143,56 +142,49 @@ export default function Header({
                     referrerPolicy="no-referrer"
                   />
                   <span className="hidden sm:inline max-w-[100px] truncate">{currentUser.name.split(' ')[0]}</span>
-                  <RefreshCw className="w-3 h-3 text-slate-350 shrink-0" />
+                  <User className="w-3 h-3 text-slate-350 shrink-0" />
                 </button>
 
                 {showUserPicker && (
                   <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="border-b border-slate-100 pb-3 mb-3">
-                      <p className="text-[10px] font-black text-orange-600 tracking-wider uppercase mb-1">
-                        {t.switchUser}
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        {t.switchUserDesc}
-                      </p>
+                    <div className="flex items-center space-x-3 pb-3 border-b border-slate-100 mb-3">
+                      <img
+                        src={currentUser.avatarUrl}
+                        alt={currentUser.name}
+                        className="w-11 h-11 rounded-full object-cover border border-slate-100"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black text-slate-800 truncate">{currentUser.name}</p>
+                        <p className="text-[10px] font-mono text-slate-450 truncate">ID: {currentUser.id}</p>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      {mockUsers.map((user) => (
-                        <button
-                          key={user.id}
-                          onClick={() => {
-                            onUserChange(user);
-                            setShowUserPicker(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-xl text-left transition-all ${
-                            currentUser.id === user.id
-                              ? 'bg-orange-50 border border-orange-200'
-                              : 'hover:bg-slate-50 border border-transparent'
-                          }`}
-                        >
-                          <img
-                            src={user.avatarUrl}
-                            alt={user.name}
-                            className="w-8 h-8 rounded-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-slate-800 truncate">{user.name}</p>
-                            <p className="text-[10px] text-slate-500 font-mono">
-                              {user.role === 'maman_sol' ? 'Maman Sòl (Gérante)' : 'Manm (Membre)'}
-                            </p>
-                          </div>
-                          {currentUser.id === user.id && (
-                            <span className="w-2.5 h-2.5 bg-orange-600 rounded-full" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                      <span>ID: {currentUser.id}</span>
-                      <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-mono text-slate-650">
-                        {getRoleLabel(currentUser.role)}
-                      </span>
+
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between items-center py-1 border-b border-slate-50">
+                        <span className="text-slate-400 font-medium">{t.userRoleLabel}</span>
+                        <span className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded-lg text-[10px] font-bold">
+                          {getRoleLabel(currentUser.role)}
+                        </span>
+                      </div>
+                      
+                      {currentUser.email && (
+                        <div className="flex justify-between items-center py-1 border-b border-slate-50">
+                          <span className="text-slate-400 font-medium">{t.userMailLabel}</span>
+                          <span className="text-slate-700 font-medium font-mono text-[10px] truncate max-w-[160px]" title={currentUser.email}>
+                            {currentUser.email}
+                          </span>
+                        </div>
+                      )}
+
+                      {currentUser.phone && (
+                        <div className="flex justify-between items-center py-1">
+                          <span className="text-slate-400 font-medium">{t.userPhoneLabel}</span>
+                          <span className="text-slate-700 font-medium font-mono text-[10px]">
+                            {currentUser.phone}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <button
@@ -201,7 +193,7 @@ export default function Header({
                         setShowUserPicker(false);
                         onLogout();
                       }}
-                      className="mt-3.5 w-full flex items-center justify-center space-x-2 py-2.5 bg-[#FFECEB] hover:bg-red-100 border border-red-200 hover:border-red-350 text-red-700 font-bold rounded-xl text-[10px] uppercase tracking-wider text-center transition-all shadow-xs"
+                      className="mt-4 w-full flex items-center justify-center space-x-2 py-2.5 bg-[#FFECEB] hover:bg-red-100 border border-red-200 hover:border-red-350 text-red-700 font-bold rounded-xl text-[10px] uppercase tracking-wider text-center transition-all shadow-xs"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>{t.logout}</span>
