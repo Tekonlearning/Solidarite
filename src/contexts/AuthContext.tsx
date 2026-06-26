@@ -13,6 +13,8 @@ interface AuthContextType {
   setAuthError: (error: string | null) => void;
   switchUser: (userId: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, name: string, role: MemberRole, phone?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -295,6 +297,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithEmail = async (email: string, password: string) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      localStorage.setItem('logged_out', 'false');
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err: any) {
+      console.error('Failed to log in with Email/Password:', err);
+      let friendlyMessage = 'Koneksyon an echwe. Tanpri tcheke imel ak modpas ou.';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        friendlyMessage = 'Imel oswa modpas sa a pa kòrèk. Tanpri verifye epi eseye ankò.';
+      } else if (err.code === 'auth/invalid-email') {
+        friendlyMessage = 'Fòma imel sa a pa valab.';
+      } else if (err.code === 'auth/network-request-failed') {
+        friendlyMessage = 'Erè rezo. Pa ka konekte ak sèvè a.';
+      } else if (err.message) {
+        friendlyMessage = `Erè koneksyon: ${err.message}`;
+      }
+      setAuthError(friendlyMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string, name: string, role: MemberRole, phone?: string) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      localStorage.setItem('logged_out', 'false');
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const u = userCred.user;
+      
+      const docRef = doc(db, 'users', u.uid);
+      const userSessionData: UserSession = {
+        id: u.uid,
+        name,
+        email: u.email || email,
+        phone: phone || '',
+        role,
+        avatarUrl: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 10000)}?w=150&auto=format&fit=crop&q=80`
+      };
+
+      await setDoc(docRef, {
+        uid: u.uid,
+        email: userSessionData.email,
+        displayName: userSessionData.name,
+        photoURL: userSessionData.avatarUrl,
+        phone: userSessionData.phone,
+        role: userSessionData.role,
+        language: 'creole',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        mockId: u.uid
+      });
+      
+      setCurrentUser(userSessionData);
+    } catch (err: any) {
+      console.error('Failed to sign up with Email/Password:', err);
+      let friendlyMessage = 'Enskripsyon an echwe. Tanpri verifye enfòmasyon yo epi eseye ankò.';
+      if (err.code === 'auth/email-already-in-use') {
+        friendlyMessage = 'Imel sa a deja itilize pou yon lòt kont.';
+      } else if (err.code === 'auth/weak-password') {
+        friendlyMessage = 'Modpas la dwe gen omwen 6 karaktè.';
+      } else if (err.code === 'auth/invalid-email') {
+        friendlyMessage = 'Fòma imel sa a pa valab.';
+      } else if (err.code === 'auth/network-request-failed') {
+        friendlyMessage = 'Erè rezo. Pa ka konekte ak sèvè a.';
+      } else if (err.message) {
+        friendlyMessage = `Erè enskripsyon: ${err.message}`;
+      }
+      setAuthError(friendlyMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
     setAuthError(null);
@@ -310,7 +390,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, firebaseUser, loading, authError, setAuthError, switchUser, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ currentUser, firebaseUser, loading, authError, setAuthError, switchUser, loginWithGoogle, loginWithEmail, signUpWithEmail, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

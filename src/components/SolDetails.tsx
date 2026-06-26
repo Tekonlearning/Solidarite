@@ -723,6 +723,30 @@ export default function SolDetails({
     });
   }, [solMembers, solContributions]);
 
+  // Dataset for Member Current Cycle Consistency Bar Chart
+  const currentCycleConsistencyData = React.useMemo(() => {
+    if (!currentCycle) return [];
+    return solMembers.map(m => {
+      const cycleContribs = solContributions.filter(c => c.memberId === m.id && c.cycleId === currentCycle.id);
+      const paidAmount = cycleContribs.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0);
+      const pendingAmount = cycleContribs.filter(c => c.status !== 'paid').reduce((sum, c) => sum + c.amount, 0);
+      const totalAmount = cycleContribs.reduce((sum, c) => sum + c.amount, 0);
+      const paidCount = cycleContribs.filter(c => c.status === 'paid').length;
+      const totalCount = cycleContribs.length || 1;
+      const consistencyRate = Math.round((paidCount / totalCount) * 100);
+
+      return {
+        name: m.name.split(' ')[0],
+        fullName: m.name,
+        'Peye (HTG)': paidAmount,
+        'Poko Peye (HTG)': pendingAmount,
+        'Total (HTG)': totalAmount,
+        'Konsistans (%)': consistencyRate,
+        status: paidCount === totalCount ? 'Peye' : 'Poko Peye'
+      };
+    });
+  }, [solMembers, solContributions, currentCycle]);
+
   return (
     <div id="sol-details-root" className="max-w-6xl mx-auto px-4 py-8 text-left font-sans leading-relaxed">
       
@@ -872,12 +896,42 @@ export default function SolDetails({
             )}
 
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (window.confirm(currentLanguage === 'creole' 
                   ? `Èske w konfime ou distribiye Pòt la (${sol.totalPot.toLocaleString()} HTG) bay ${activeBeneficiary.memberName} epi w vle fèmen men sa a?`
                   : `Confirmez-vous la distribution de la main de ${sol.totalPot.toLocaleString()} HTG à ${activeBeneficiary.memberName} ?`
                 )) {
-                  onCompleteCycleHand(sol.id);
+                  try {
+                    await onCompleteCycleHand(sol.id);
+                    
+                    // Trigger a spectacular, community-rewarding confetti celebration!
+                    const duration = 5 * 1000;
+                    const end = Date.now() + duration;
+
+                    const frame = () => {
+                      confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 65,
+                        origin: { x: 0, y: 0.8 },
+                        colors: ['#f97316', '#fb923c', '#fdba74', '#10b981', '#34d399', '#3b82f6']
+                      });
+                      confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 65,
+                        origin: { x: 1, y: 0.8 },
+                        colors: ['#f97316', '#fb923c', '#fdba74', '#10b981', '#34d399', '#3b82f6']
+                      });
+
+                      if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                      }
+                    };
+                    frame();
+                  } catch (err) {
+                    console.error("Confetti trigger skipped because of hand rotation error:", err);
+                  }
                 }
               }}
               className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs py-3 px-5 rounded-2xl shadow-sm flex items-center justify-center space-x-2 transition-transform hover:-translate-y-0.5 shrink-0 cursor-pointer"
@@ -1051,6 +1105,77 @@ export default function SolDetails({
               </select>
             </div>
           </div>
+
+          {/* CURRENT CYCLE CONTRIBUTION CONSISTENCY BAR CHART */}
+          {currentCycle && currentCycleConsistencyData.length > 0 && (
+            <BentoCard
+              id="sol-member-cycle-consistency-chart"
+              index={0}
+              hoverScale={false}
+              className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-tight flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-orange-600 animate-pulse" />
+                    {currentLanguage === 'creole' 
+                      ? `Konsistans Kotizasyon Patisipan yo (Sik Kouran #${currentCycle.cycleNumber})`
+                      : `Régularité des Cotisations des Membres (Cycle Actuel #${currentCycle.cycleNumber})`}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {currentLanguage === 'creole'
+                      ? 'Vizyalizasyon nivo peman kotizasyon ak fon ki kolekte nan men chak manm pou wotasyon aktif la.'
+                      : 'Visualisation du montant cotisé et collecté par membre pour cette rotation active.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-md shadow-xs"></span> {currentLanguage === 'creole' ? 'Peye' : 'Payé'}</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-amber-500 rounded-md shadow-xs"></span> {currentLanguage === 'creole' ? 'Poko Peye' : 'Non payé'}</span>
+                </div>
+              </div>
+
+              <div className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={currentCycleConsistencyData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} 
+                      axisLine={false} 
+                      tickLine={false} 
+                    />
+                    <YAxis 
+                      tick={{ fill: '#64748b', fontSize: 9, fontWeight: 'bold' }} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tickFormatter={(val) => `${val.toLocaleString()} G`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: '#0f172a', 
+                        border: 'none', 
+                        borderRadius: '12px', 
+                        color: '#fff', 
+                        fontSize: '11px',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                      }}
+                      formatter={(value: any, name: any) => [
+                        `${value.toLocaleString()} HTG`,
+                        name === 'Peye (HTG)' 
+                          ? (currentLanguage === 'creole' ? 'Kotizasyon Peye' : 'Cotisation Payée')
+                          : (currentLanguage === 'creole' ? 'Poko Peye' : 'Non Payée')
+                      ]}
+                    />
+                    <Bar dataKey="Peye (HTG)" stackId="a" fill="#10b981" maxBarSize={32} radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="Poko Peye (HTG)" stackId="a" fill="#f59e0b" maxBarSize={32} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </BentoCard>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {filteredSolMembers.length === 0 && (
